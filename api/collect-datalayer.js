@@ -1,8 +1,6 @@
-// /api/collect-datalayer.js
-
 const allowedDomains = [
-  'https://seusite.com',
-  'https://www.seusite.com'
+  'https://catchthefever.com/',
+  'https://www.catchthefever.com'
 ];
 
 const CLIENT_TOKEN = process.env.CLIENT_TOKEN;
@@ -11,7 +9,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 function sanitizeDataLayer(dataLayer) {
   const sensitiveKeys = [
-    'email', 'nome', 'cpf', 'phone', 'telefone', 'endereco', 'address'
+    'email', 'name', 'phone', 'number', 'address'
   ];
   return dataLayer.map(obj =>
     Object.fromEntries(
@@ -47,15 +45,20 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "Forbidden - invalid token" });
   }
 
-  if (!req.body || !Array.isArray(req.body.datalayer)) {
-    return res.status(400).json({ error: "Invalid payload: datalayer array missing" });
-  }
+  let sanitizedDataLayer;
 
-  if (req.body.datalayer.length > 1000) {
-    return res.status(413).json({ error: "Payload too large" });
+  if (Array.isArray(req.body.datalayer) && req.body.datalayer.length) {
+    if (req.body.datalayer.length > 1000) {
+      return res.status(413).json({ error: "Payload too large" });
+    }
+    sanitizedDataLayer = sanitizeDataLayer(req.body.datalayer);
+  } else {
+    sanitizedDataLayer = [{
+      info: req.body.info || "no_dataLayer",
+      url: req.body.url || "",
+      timestamp: req.body.timestamp || new Date().toISOString()
+    }];
   }
-
-  const sanitizedDataLayer = sanitizeDataLayer(req.body.datalayer);
 
   const response = await fetch(`${SUPABASE_URL}/rest/v1/datalayer`, {
     method: 'POST',
