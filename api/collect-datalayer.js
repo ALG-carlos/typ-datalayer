@@ -1,5 +1,5 @@
 const allowedDomains = [
-  'https://catchthefever.com/',
+  'https://catchthefever.com',
   'https://www.catchthefever.com'
 ];
 
